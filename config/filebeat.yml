@@ -1,0 +1,18 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.modules:
+- module: zeek
+
+processors:
+- add_cloud_metadata: ~
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  username: '${ELK_USER:}'
+  password: '${ELK_PASS:}'
+
+setup.kibana:
+  host: '${KIBANA_HOSTS:kibana:5601}'

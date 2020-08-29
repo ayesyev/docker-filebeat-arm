@@ -1,0 +1,52 @@
+FROM alpine:3.12 as builder
+
+ENV VERSION 7.9.0
+
+# Install go
+RUN apk add --no-cache git make musl-dev go
+
+# Configure Go
+ENV GOROOT /usr/lib/go
+ENV GOPATH /go
+ENV PATH /go/bin:$PATH
+RUN go version
+# Get Filebeats src
+
+RUN echo "===> Checking out GO sources..." \
+  && go get github.com/elastic/beats; exit 0
+WORKDIR /go/src/github.com/elastic/beats/filebeat/
+RUN git checkout v$VERSION
+ENV GOARCH=arm64 
+RUN echo "===> Building Go..." \
+  && go build
+RUN mkdir /build
+RUN cp filebeat /build/filebeat-arm64
+
+########################################################
+FROM alpine:3.12
+
+ENV VERSION=7.9.0
+RUN apk add --no-cache bash libc6-compat curl jq
+
+RUN \
+  cd /tmp \
+  && wget https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-${VERSION}-linux-x86_64.tar.gz \
+  && tar xzvf filebeat-${VERSION}-linux-x86_64.tar.gz \
+  && mv filebeat-${VERSION}-linux-x86_64 /usr/share/filebeat \
+  && mkdir /usr/share/filebeat/logs /usr/share/filebeat/data \
+  && rm /tmp/*
+
+# Substitute a filebeat binary with the built one
+COPY --from=builder /build /usr/share/filebeat
+
+ENV PATH $PATH:/usr/share/filebeat
+
+COPY config /usr/share/filebeat
+
+COPY entrypoint.sh /usr/local/bin/entrypoint
+RUN chmod +x /usr/local/bin/entrypoint
+
+WORKDIR /usr/share/filebeat
+
+ENTRYPOINT ["entrypoint"]
+CMD ["-h"]
