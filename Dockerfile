@@ -3,7 +3,7 @@ FROM alpine:3.12 as builder
 ENV VERSION 7.9.0
 
 # Install go
-RUN apk add --no-cache git make musl-dev go
+RUN apk add --no-cache gcc git make musl-dev go
 
 # Configure Go
 ENV GOROOT /usr/lib/go
@@ -16,7 +16,8 @@ RUN echo "===> Checking out GO sources..." \
   && go get github.com/elastic/beats; exit 0
 WORKDIR /go/src/github.com/elastic/beats/filebeat/
 RUN git checkout v$VERSION
-ENV GOARCH=arm64 
+ENV GOARCH=arm64
+ENV GOOS=linux 
 RUN echo "===> Building Go..." \
   && go build
 RUN mkdir /build
