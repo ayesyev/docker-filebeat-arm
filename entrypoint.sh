@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 
@@ -118,9 +118,9 @@ if [[ -z $1 ]] || [[ ${1:0:1} == '-' ]] ; then
   # geoipInfo
   waitForKibana ${KIBANA_HOST:-kibana:5601}
   echo "===> Setting up filebeat..."
-  filebeat-arm64 setup --modules zeek -e -E 'setup.dashboards.enabled=true'
+  filebeat setup --modules zeek -e -E 'setup.dashboards.enabled=true'
   echo "===> Starting filebeat..."
-  exec filebeat-arm64 "$@"
+  exec filebeat "$@"
 fi
 
 exec "$@"
